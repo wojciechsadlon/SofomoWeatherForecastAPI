@@ -28,7 +28,6 @@ namespace SofomoWeatherForecastAPI.Data
             modelBuilder.Entity<WeatherForecastUnit>()
                 .HasIndex(u => new { u.Temperature2mMax, u.Temperature2mMin, u.RainSum, u.WindSpeed10mMax })
                 .IsUnique();
-
         }
     }
 }

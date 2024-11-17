@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RestSharp;
 using SofomoWeatherForecastAPI.Data;
-using SofomoWeatherForecastAPI.Entities;
 using SofomoWeatherForecastAPI.Models;
 using SofomoWeatherForecastAPI.Services;
 
@@ -13,10 +12,10 @@ namespace SofomoWeatherForecastAPI.Controllers
     public class WeatherForecastController : ControllerBase
     {
         private readonly WeatherDbContext _context;
-        private readonly WeatherForecastService _service;
-        private readonly ILogger<WeatherForecastService> _logger;
+        private readonly IWeatherForecastService _service;
+        private readonly ILogger<IWeatherForecastService> _logger;
 
-        public WeatherForecastController(WeatherDbContext context, WeatherForecastService service, ILogger<WeatherForecastService> logger)
+        public WeatherForecastController(WeatherDbContext context, IWeatherForecastService service, ILogger<IWeatherForecastService> logger)
         {
             _context = context;
             _service = service;
@@ -27,6 +26,8 @@ namespace SofomoWeatherForecastAPI.Controllers
         public async Task<IActionResult> AddLocationAndGetWeather(double latitude, double longitude)
         {
             var client = new RestClient("https://api.open-meteo.com");
+            var lati = latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var longi = longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
             var request = new RestRequest("/v1/forecast", Method.Get)
                 .AddQueryParameter("latitude", latitude.ToString(System.Globalization.CultureInfo.InvariantCulture))
@@ -51,6 +52,45 @@ namespace SofomoWeatherForecastAPI.Controllers
             {
                 _logger.LogError(ex, "Error saving weather data to database.");
                 throw new Exception(ex.Message);
+            }
+        }
+
+        [HttpPost("sync-weather")]
+        public async Task<IActionResult> SyncWeatherForExistingLocations()
+        {
+            try
+            {
+                var locations = _service.GetLocationsData();
+                if (locations == null || locations.Count == 0)
+                {
+                    return NotFound("No locations found to sync weather data.");
+                }
+
+                foreach (var location in locations)
+                {
+                    if (location.Latitude != null && location.Longitude != null)
+                    {
+                        var latitude = location.Latitude;
+                        var longitude = location.Longitude;
+
+                        var weatherDataResult = await AddLocationAndGetWeather(latitude, longitude);
+                        if (weatherDataResult == null)
+                        {
+                            _logger.LogError($"Failed to sync weather for location ID: {location.Id}");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Location ID: {location.Id} does not have valid coordinates.");
+                    }
+                }
+
+                return Ok("Weather data synced for all locations.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing weather data for existing locations.");
+                return StatusCode(500, "Internal server error.");
             }
         }
 
@@ -93,32 +133,77 @@ namespace SofomoWeatherForecastAPI.Controllers
         [HttpGet("locations")]
         public IActionResult GetLocations()
         {
-            var locations = _service.GetLocationsData();
-            return Ok(locations);
+            try
+            {
+                var locations = _service.GetLocationsData();
+                if (locations == null || !locations.Any())
+                {
+                    return NotFound("No locations found.");
+                }
+                return Ok(locations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving locations.");
+                return StatusCode(500, "Internal server error.");
+            }
         }
 
         [HttpGet("weather-data")]
         public IActionResult GetWeatherData()
         {
-            var weatherForecasts = _service.GetWeatherData();
-            return Ok(weatherForecasts);
+            try
+            {
+                var weatherForecasts = _service.GetWeatherData();
+                if (weatherForecasts == null || !weatherForecasts.Any())
+                {
+                    return NotFound("No weather data found.");
+                }
+                return Ok(weatherForecasts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving weather data.");
+                return StatusCode(500, "Internal server error.");
+            }
         }
 
         [HttpGet("locations/{id}/weather")]
         public IActionResult GetWeatherByLocationId(int id)
         {
-            var forecasts = _service.GetWeatherByLocationId(id);
-            if (forecasts == null || forecasts.Count == 0) return NotFound();
-
-            return Ok(forecasts);
+            try
+            {
+                var forecasts = _service.GetWeatherByLocationId(id);
+                if (forecasts == null || forecasts.Count == 0)
+                {
+                    return NotFound($"No weather data found for location ID: {id}");
+                }
+                return Ok(forecasts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving weather data for location ID: {id}");
+                return StatusCode(500, "Internal server error.");
+            }
         }
 
         [HttpDelete("locations/{id}")]
         public  IActionResult DeleteLocation(int id)
         {
-            var success = _service.DeleteLocation(id);
-            if (!success) return NotFound();
-            return Ok();
+            try
+            {
+                var success = _service.DeleteLocation(id);
+                if (!success)
+                {
+                    return NotFound($"Location with ID {id} not found.");
+                }
+                return Ok("Location deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting location with ID: {id}");
+                return StatusCode(500, "Internal server error.");
+            }
         }
     }
 }

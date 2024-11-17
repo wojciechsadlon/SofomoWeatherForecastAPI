@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Filters;
 using SofomoWeatherForecastAPI.Data;
@@ -14,7 +15,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
-builder.Services.AddScoped<WeatherForecastService>();
+builder.Services.AddScoped<IWeatherForecastService, WeatherForecastService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -52,9 +53,10 @@ app.UseCors("AllowAll");
 
 app.MapControllers();
 
+//cache init
 using (var scope = app.Services.CreateScope())
 {
-    var weatherService = scope.ServiceProvider.GetRequiredService<WeatherForecastService>();
+    var weatherService = scope.ServiceProvider.GetRequiredService<IWeatherForecastService>();
     weatherService.InitializeCache();
 }
 

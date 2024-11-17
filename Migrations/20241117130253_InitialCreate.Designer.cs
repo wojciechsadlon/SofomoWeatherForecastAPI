@@ -12,8 +12,8 @@ using SofomoWeatherForecastAPI.Data;
 namespace SofomoWeatherForecastAPI.Migrations
 {
     [DbContext(typeof(WeatherDbContext))]
-    [Migration("20241116150641_add-weather-forecast-unit")]
-    partial class addweatherforecastunit
+    [Migration("20241117130253_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -73,9 +73,6 @@ namespace SofomoWeatherForecastAPI.Migrations
                     b.Property<int?>("WeatherForecastUnitId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WeatherForecastUnitId1")
-                        .HasColumnType("int");
-
                     b.Property<double?>("WindSpeedMax")
                         .HasColumnType("float");
 
@@ -84,8 +81,6 @@ namespace SofomoWeatherForecastAPI.Migrations
                     b.HasIndex("LocationId");
 
                     b.HasIndex("WeatherForecastUnitId");
-
-                    b.HasIndex("WeatherForecastUnitId1");
 
                     b.ToTable("WeatherForecasts");
                 });
@@ -135,21 +130,12 @@ namespace SofomoWeatherForecastAPI.Migrations
                         .HasForeignKey("WeatherForecastUnitId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SofomoWeatherForecastAPI.Entities.WeatherForecastUnit", null)
-                        .WithMany("WeatherForecasts")
-                        .HasForeignKey("WeatherForecastUnitId1");
-
                     b.Navigation("Location");
 
                     b.Navigation("WeatherForecastUnit");
                 });
 
             modelBuilder.Entity("SofomoWeatherForecastAPI.Entities.Location", b =>
-                {
-                    b.Navigation("WeatherForecasts");
-                });
-
-            modelBuilder.Entity("SofomoWeatherForecastAPI.Entities.WeatherForecastUnit", b =>
                 {
                     b.Navigation("WeatherForecasts");
                 });

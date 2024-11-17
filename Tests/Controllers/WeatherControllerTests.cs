@@ -17,7 +17,7 @@ namespace WeatherForecastAPI.Tests
         private readonly WeatherDbContext _context;
         private readonly WeatherForecastService _service;
         private readonly MemoryCache _cache;
-        private readonly Mock<ILogger<WeatherForecastService>> _loggerMock;
+        private readonly Mock<ILogger<IWeatherForecastService>> _loggerMock;
         private readonly Location _location;
 
         public WeatherControllerTests()
@@ -28,7 +28,7 @@ namespace WeatherForecastAPI.Tests
 
             _context = new WeatherDbContext(options);
             _cache = new MemoryCache(new MemoryCacheOptions());
-            _loggerMock = new Mock<ILogger<WeatherForecastService>>();
+            _loggerMock = new Mock<ILogger<IWeatherForecastService>>();
             _service = new WeatherForecastService(_context, _cache, _loggerMock.Object);
             _controller = new WeatherForecastController(_context, _service, _loggerMock.Object);
             _location = new Location { Latitude = 52.2297, Longitude = 21.0122 };

@@ -5,15 +5,15 @@ using SofomoWeatherForecastAPI.Data;
 using SofomoWeatherForecastAPI.Entities;
 using SofomoWeatherForecastAPI.Models;
 
-public class WeatherForecastService
+public class WeatherForecastService : IWeatherForecastService
 {
     private readonly WeatherDbContext _dbContext;
     private readonly IMemoryCache _cache;
-    private readonly ILogger<WeatherForecastService> _logger;
+    private readonly ILogger<IWeatherForecastService> _logger;
     private readonly string _cacheWeather = "weather_data";
     private readonly string _cacheLocations = "locations";
 
-    public WeatherForecastService(WeatherDbContext dbContext, IMemoryCache cache, ILogger<WeatherForecastService> logger)
+    public WeatherForecastService(WeatherDbContext dbContext, IMemoryCache cache, ILogger<IWeatherForecastService> logger)
     {
         _dbContext = dbContext;
         _cache = cache;
@@ -131,11 +131,12 @@ public class WeatherForecastService
         return weatherForecasts.Select(f => new WeatherForecastModel
         {
             Id = f.Id,
+            LocationId = f.LocationId,
             ForecastDate = f.ForecastDate,
-            TemperatureMax = f.TemperatureMax + ' ' + f.WeatherForecastUnit?.Temperature2mMax,
-            TemperatureMin = f.TemperatureMin + ' ' + f.WeatherForecastUnit?.Temperature2mMin,
-            RainSum = f.RainSum + ' ' + f.WeatherForecastUnit?.RainSum,
-            WindSpeedMax = f.WindSpeedMax + ' ' + f.WeatherForecastUnit?.WindSpeed10mMax
+            TemperatureMax = f.TemperatureMax.ToString() + ' ' + f.WeatherForecastUnit?.Temperature2mMax,
+            TemperatureMin = f.TemperatureMin.ToString() + ' ' + f.WeatherForecastUnit?.Temperature2mMin,
+            RainSum = f.RainSum.ToString() + ' ' + f.WeatherForecastUnit?.RainSum,
+            WindSpeedMax = f.WindSpeedMax.ToString() + ' ' + f.WeatherForecastUnit?.WindSpeed10mMax
         }).ToList();
     }
 
