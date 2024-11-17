@@ -1,0 +1,24 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=tempdb;User=sa;Password=Sofomo123!;TrustServerCertificate=true;
+    depends_on:
+      - db
+  db:
+     image: mcr.microsoft.com/mssql/server:2022-latest
+     container_name: db
+     environment:
+       - ACCEPT_EULA=Y
+       - SA_PASSWORD=Sofomo123!
+     ports:
+       - "1433:1433"
+     volumes:
+       - mssql_data:/var/opt/mssql
+volumes:
+  mssql_data:

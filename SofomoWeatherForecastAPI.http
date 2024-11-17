@@ -1,0 +1,6 @@
+@SofomoWeatherForecastAPI_HostAddress = http://localhost:5291
+
+GET {{SofomoWeatherForecastAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
